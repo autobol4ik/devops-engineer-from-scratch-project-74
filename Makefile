@@ -2,11 +2,13 @@ COMPOSE ?= docker compose --project-name hexlet-8-compose
 BASE_COMPOSE = $(COMPOSE) -f docker-compose.yml
 CI_COMPOSE = docker compose --project-name hexlet-8-ci -f docker-compose.yml
 
-.PHONY: setup dev test ci build push down
+.PHONY: prepare-env setup dev test ci build push down
 
-setup:
+prepare-env:
 	cp -n .env.example .env
-	$(COMPOSE) run --rm app make setup
+
+setup: prepare-env
+	$(COMPOSE) run --build --rm -e NPM_CONFIG_INCLUDE=dev app make setup
 
 dev:
 	$(COMPOSE) up --build
@@ -14,7 +16,7 @@ dev:
 test:
 	$(BASE_COMPOSE) up --build --abort-on-container-exit --exit-code-from app
 
-ci:
+ci: prepare-env
 	@$(CI_COMPOSE) down --volumes --remove-orphans
 	@status=0; \
 	$(CI_COMPOSE) up --build --abort-on-container-exit --exit-code-from app || status=$$?; \
